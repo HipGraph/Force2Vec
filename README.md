@@ -64,7 +64,7 @@ Here, `-input` is the full path of input file, `-output` is the directory where 
 ```
 First line of output file will contains the number of vertices (N) and the embedding dimension (D). The following N lines will contain vertex id and a D-dimensional embedding for corresponding vertex id.
 
-N.B.: To reproduce the runtime results, we recommend to run the option 11 provided that you have AVX512 instruction set. For general purpose usages, run Force2Vec with any option from  5, 6, and 7. AVX512 currently supports 128 dimensional embeddings.
+N.B.: To reproduce the runtime results, we recommend to run the option 11 provided that you have AVX512 instruction set. For general purpose usages, run Force2Vec with any option from  5, 6, and 7. AVX512 currently supports 64 and 128 dimensional embeddings.
 
 ### Convert Edgelist Input File to Matrix Market Format ###
 To increase the usability of Force2Vec for other file types, we have a python script that can convert edgelist input format to matrix market format. It uses `networkx` python package. You can convert an edgelist input file as follows:
