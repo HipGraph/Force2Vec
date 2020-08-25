@@ -33,7 +33,7 @@ $ make AVX512=true
 ```
 On a Linux terminal, you can type `lscpu` to see supported flags in your machine. If you see avx512\* there, then your machine supports AVX512 instruction set.
 
-## C++ Users: Run Force2Vec from Command Line
+## Users: Run Force2Vec from Command Line
 
 Input file must be in matrix market format ([check here for details about .mtx file](https://math.nist.gov/MatrixMarket/formats.html)). A lot of datasets can be found at [suitesparse website](https://sparse.tamu.edu). We provide a few input files inside the  datasets/input directory. To run Force2Vec, type the following command:
 ```
