@@ -95,7 +95,7 @@ $ python -u performancescores/runvisualization.py datasets/input/cora.mtx 1 data
 ```
 
 ## Citation
-If you find this repository helpful, please cite out paper as follows:
+If you find this repository helpful, please cite our paper as follows:
 
 Md. Khaledur Rahman, M. Haque Sujon and Ariful Azad, "Force2Vec: Parallel Force-Directed Graph Embedding", The 20th IEEE International Conference on Data Mining (IEEE ICDM 2020), November, 2020, Sorrento, Italy.
 ```

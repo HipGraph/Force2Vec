@@ -49,7 +49,7 @@ void helpmessage(){
 void TestAlgorithms(int argc, char *argv[]){
 	VALUETYPE gamma = 1.0, lr = 0.02;
 	INDEXTYPE batchsize = 384, iterations = 1200, numberOfThreads = omp_get_max_threads(), dim = 128, option = 5, nsamples = 5;
-	string inputfile = "", initfile = "", outputfile = "", algoname = "f2v", initname = "RAND";
+	string inputfile = "", initfile = "", outputfile = "", algoname = "Force2Vec:t-distribution with negative sampling", initname = "RAND";
 	for(int p = 0; p < argc; p++){
 		if(strcmp(argv[p], "-input") == 0){
 			inputfile = argv[p+1];
@@ -75,28 +75,28 @@ void TestAlgorithms(int argc, char *argv[]){
 		else if(strcmp(argv[p], "-option") == 0){
                         option = atoi(argv[p+1]);
 			if(option == 1){
-				algoname = "f2v";
+				algoname = "Force2Vec(n^2)";
 			}
 			else if(option == 2){
-				algoname = "f2vbl";
+				algoname = "BatchLayout(n^2)";
 			}else if(option == 3){
-				algoname = "f2vll";
+				algoname = "LinLog(n^2)";
 			}else if(option == 4){
-				algoname = "f2vfa";
+				algoname = "ForceAtlas(n^2)";
 			}else if(option == 5){
-				algoname = "tf2vns";
+				algoname = "Force2Vec:t-distribution with negative sampling";
 			}else if(option == 6){
-				algoname = "sf2vns";
+				algoname = "Force2Vec:sigmoid with negative sampling";
 			}else if(option == 7){
-				algoname = "rf2vnsrweff";
+				algoname = "Force2Vec:sigmoid based random-walk";
 			}else if(option == 8){
-				algoname = "tf2vns_avxz";
+				algoname = "Force2Vec:AVX512 support for t-distribution with negative sampling";
 			}else if(option == 9){
-                                algoname = "sf2vnsrw_avxz";
+                                algoname = "Force2Vec:AVX512 support for sigmoid with negative sampling";
                         }else if(option == 10){
-                                algoname = "rf2vnsrweff_avxz";
+                                algoname = "Force2Vec:AVX512 support for sigmoid based random-walk";
                         }else if(option == 11){
-                                algoname = "tf2vnslb_avxz";
+                                algoname = "Force2Vec:Load-balancing with AVX512 support for t-distribution with negative sampling";
                         }
                 }
 		else if(strcmp(argv[p], "-lr") == 0){
