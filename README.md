@@ -50,10 +50,10 @@ Here, `-input` is the full path of input file, `-output` is the directory where 
 -nsamples <int>, number of negative samples. (default:5)
 -lr <float>, learning rate of SGD. (default:0.02)
 -option <int>, an integer among 1 to 11. (default:5)
-        1 - for Force2Vec (O(n<sup>2</sup>) version).
-        2 - for BatchLayout (O(n<sup>2</sup>) version).
-        3 - for LinLog (O(n<sup>2</sup>) version).
-        4 - for ForceAtlas (O(n<sup>2</sup>) version).
+        1 - for Force2Vec (O(n^2) version).
+        2 - for BatchLayout (O(n^2) version).
+        3 - for LinLog (O(n^2) version).
+        4 - for ForceAtlas (O(n^2) version).
         5 - for t-distribution + negative sampling (tForce2Vec).
         6 - for sigmoid + negative sampling (sForce2Vec).
         7 - for sigmoid + semi-random walk (rForce2Vec).
