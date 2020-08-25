@@ -1,0 +1,270 @@
+#include "simd.h"
+@define pre @@(@pre)@
+@SKIP ******** dim must be multiple of VLEN ***** 
+@ifdef ! DIM 
+   @iexp DIM 32
+@endifdef
+@PRE S  
+   @ifdef ! VLEN
+      @iexp VLEN 16 
+   @endifdef
+@PRE D
+   @ifdef ! VLEN
+      @iexp VLEN 8 
+   @endifdef
+@PRE ! 
+@iexp rdim @(VLEN) @(DIM) /
+@SKIP @print rdim= @(rdim) 
+@SKIP ***** test whether DIM is multiple of VLEN 
+@iexp kk @(rdim) @(VLEN) *
+@iif kk ! DIM
+   @abort "DIM=@(DIM) must be multiple of VLEN=@(VLEN)"
+@endiif 
+
+void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
+(
+   INDEXTYPE i,          /* row id: index of outer most loop  */
+   INDEXTYPE baseindex,  /* base row id for this minibatch */
+   VALUETYPE *X,         /* nCoordinate */ 
+   VALUETYPE *S,         /* sample Coordinate */
+   VALUETYPE *Y,         /* prevCoordinate, output */
+   VALUETYPE STEP,      
+   INDEXTYPE *rowptr,    /* rowptr of sparse A matrix (from CSR)*/
+   INDEXTYPE *colids,    /* colids of sparse A matrix (from CSR)*/
+   VALUETYPE MINBOUND,     
+   VALUETYPE MAXBOUND,
+   INDEXTYPE ns          /* number of samples */
+)
+{
+   @declare "   register VTYPE " y n ";"
+      @iexp i 0 
+      @iwhile i < @(rdim)
+         Vxi@(i)
+         Vy@(i)
+         @iexp i @(i) 1 +
+      @endiwhile
+   @enddeclare
+   VTYPE VMAXBOUND, VMINBOUND; 
+   INDEXTYPE iindex = i * @(DIM); 
+   VALUETYPE *Xi = X + iindex; 
+   INDEXTYPE bindex = i * @(DIM); 
+   VALUETYPE degi = 1.0; 
+   
+   BCL_vset1(VMAXBOUND, MAXBOUND); 
+   BCL_vset1(VMINBOUND, -MAXBOUND); 
+
+   // load Vy 
+   @iexp i 0
+   @iwhile i < @(rdim)
+   BCL_vld(Vy@(i), Y+bindex-baseindex+VLEN*@(i)); 
+      @iexp i @(i) 1 +
+   @endiwhile
+   
+   // load Vxi 
+   @iexp i 0
+   @iwhile i < @(rdim)
+   BCL_vld(Vxi@(i), Xi+VLEN*@(i)); 
+      @iexp i @(i) 1 +
+   @endiwhile
+   
+   // attractive force calculation 
+   for (INDEXTYPE j = rowptr[i]; j < rowptr[i+1]; j++)
+   {
+   @declare "      VTYPE " y n ";"
+      @iexp i 0 
+      @iwhile i < @(rdim)
+         Vxj@(i)
+         @iexp i @(i) 1 +
+      @endiwhile
+   @enddeclare
+   @declare "      VTYPE " y n ";"
+      @iexp i 0 
+      @iwhile i < @(rdim)
+         Vd@(i)
+         @iexp i @(i) 1 +
+      @endiwhile
+      Vt
+   @enddeclare
+   @declare "      VTYPE " y n ";"
+      @iexp i 0 
+      @iwhile i < @(rdim)
+         Vatt@(i)
+         @iexp i @(i) 1 +
+      @endiwhile
+   @enddeclare
+      VALUETYPE attrc = 0;
+      INDEXTYPE colidj = colids[j];
+      INDEXTYPE jindex = colidj*@(DIM);
+      VALUETYPE *Xj = X + jindex; 
+   
+      // load Vxj 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vld(Vxj@(i), Xi+VLEN*@(i)); 
+      @iexp i @(i) 1 +
+   @endiwhile
+      // init Vatt  
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vzero(Vatt@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vsub 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vsub(Vd@(i), Vxi@(i), Vxj@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vatt@(i), Vd@(i), Vd@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // reduce Vatt: FIXME: use logN tree reduction
+   @iexp i 1
+   @iwhile i < @(rdim)
+      BCL_vadd(Vatt0, Vatt0, Vatt@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      BCL_vrsum1(attrc, Vatt0);
+   
+      BCL_vset1(Vatt0, attrc); // a = a
+      BCL_vset1(Vt, 1.0f); // t = 1
+      BCL_vadd(Vatt0, Vatt0, Vt); // a = t + a
+      BCL_vrcp(Vatt0, Vatt0); // a = 1/a
+      BCL_vset1(Vt, -2.0f); // t = -2
+      BCL_vmul(Vatt0, Vatt0, Vt); // a = -2 * a
+               
+      // vmul 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmul(Vd@(i), Vatt0, Vd@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vmax 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmax(Vd@(i), Vd@(i), VMINBOUND);
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vmin 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmin(Vd@(i), Vd@(i), VMAXBOUND);
+      @iexp i @(i) 1 +
+   @endiwhile
+      
+      BCL_vset1(Vt, STEP);
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vy@(i), Vd@(i), Vt);
+      @iexp i @(i) 1 +
+   @endiwhile
+   }
+   
+   for (INDEXTYPE j = 0; j < ns; j++)
+   {
+      VALUETYPE repuls = 0;
+      INDEXTYPE jindex = j * @(DIM);
+   @declare "      VTYPE " y n ";"
+      @iexp i 0 
+      @iwhile i < @(rdim)
+         Vs@(i)
+         @iexp i @(i) 1 +
+      @endiwhile
+   @enddeclare
+   @declare "      VTYPE " y n ";"
+      @iexp i 0 
+      @iwhile i < @(rdim)
+         Vd@(i)
+         @iexp i @(i) 1 +
+      @endiwhile
+      Vt
+   @enddeclare
+   @declare "      VTYPE " y n ";"
+      @iexp i 0 
+      @iwhile i < @(rdim)
+         Vrep@(i)
+         @iexp i @(i) 1 +
+      @endiwhile
+   @enddeclare
+      // load Vs 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vld(Vs@(i), S + jindex + VLEN*@(i)); 
+      @iexp i @(i) 1 +
+   @endiwhile
+      // init Vatt  
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vzero(Vrep@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vsub 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vsub(Vd@(i), Vxi@(i), Vs@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vrep@(i), Vd@(i), Vd@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // reduce Vrep: FIXME: use logN tree reduction
+   @iexp i 1
+   @iwhile i < @(rdim)
+      BCL_vadd(Vrep0, Vrep0, Vrep@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      BCL_vrsum1(repuls, Vrep0);
+   
+      BCL_vset1(Vrep0, repuls); // a = a
+      BCL_vset1(Vt, 1.0f); // t = 1
+      BCL_vadd(Vt, Vrep0, Vt); // t = t + a
+      BCL_vmul(Vrep0, Vrep0, Vt); // a = t * a
+
+      BCL_vrcp(Vrep0, Vrep0); // a = 1/a
+      BCL_vset1(Vt, 2.0f); // t = 2
+      BCL_vmul(Vrep0, Vrep0, Vt); // a = 2 * a
+      
+      // vmul 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmul(Vd@(i), Vrep0, Vd@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vmax 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmax(Vd@(i), Vd@(i), VMINBOUND);
+      @iexp i @(i) 1 +
+   @endiwhile
+      // vmin 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmin(Vd@(i), Vd@(i), VMAXBOUND);
+      @iexp i @(i) 1 +
+   @endiwhile
+   
+      BCL_vset1(Vt, STEP);
+
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vy@(i), Vd@(i), Vt);
+      @iexp i @(i) 1 +
+   @endiwhile
+   }
+
+   @iexp i 0
+   @iwhile i < @(rdim)
+   BCL_vst(Y+bindex-baseindex + VLEN*@(i), Vy@(i)); 
+      @iexp i @(i) 1 +
+   @endiwhile
+}
+
+
