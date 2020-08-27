@@ -1,0 +1,19 @@
+This is the README file for kernel generator. If you want to generate kernels
+to calculate attractive and repulsive forces based on t-distribution and/or 
+sigmoid, you can use this generator. 
+
+Make variables: 
+
+force = [t,s] : to generate kernel based on t-distribution, use make force=t
+                to generate kernel based on sigmoid, use make force=s
+
+vlen = [D]    : to set SIMD width, use vlen. Please see simd.h file to get 
+                different values of vlen on different architecture. 
+dim = [D]     : to set dimension,  use dim and it should be multiple of vlen. 
+pre = [s,d]   : to set precision of the kernel as single precision floating point
+                use pre=s. For double precision, use pre=d  
+
+Please note that you will need simd.h file to compile these kernels. It is a 
+wrapper and contains all system specific implementations. 
+
+

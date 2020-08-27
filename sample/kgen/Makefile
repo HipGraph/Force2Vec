@@ -13,15 +13,20 @@ vlen = 16
 # dimension 
 dim = 128
 
+# frc calc method 
+frout=frc_tdist
+ifeq ($(force), s)
+   frout=frc_sigmoid
+endif 
 
-all: g$(pre)kernel$(dim).h  
+all: g$(pre)$(frout)_D$(dim).h  
 
 xextract: extract.c 
 	$(CC) $(CFLAGS) -o $@ extract.c 
 
-g$(pre)kernel$(dim).h : xextract genDimFrc.base
+g$(pre)$(frout)_D$(dim).h : xextract genDimFrc.base
 	./xextract -b genDimFrc.base -langC -def DIM $(dim) pre=$(pre) \
-	   -def VLEN $(vlen) -o $@  
+	   -def VLEN $(vlen) rout=$(frout) -o $@  
 
 clean:
 	rm -f *.h 
