@@ -29,7 +29,7 @@ g$(pre)$(frout)_D$(dim).h : xextract genDimFrc.base
 	   -def VLEN $(vlen) rout=$(frout) -o $@  
 
 clean:
-	rm -f *.h 
+	rm -f g*.h 
 
 kill:
 	rm -f xextract   
