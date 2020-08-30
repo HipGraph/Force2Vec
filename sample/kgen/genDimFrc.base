@@ -1,4 +1,13 @@
 @ROUT ! 
+@define pre @@(@pre)@
+@PRE S
+#define VALUETYPE float
+#define SREAL 1
+@PRE D
+#define VALUETYPE double
+#define DREAL 1
+@PRE !
+#define INDEXTYPE int 
 #include "simd.h"
 @define pre @@(@pre)@
 @SKIP ******** dim must be multiple of VLEN ***** 
@@ -23,10 +32,10 @@
 @endiif 
 @ROUT frc_tdist
 /* frc_tdist : t-distribution + negative sampling : NS */
-void algorithms::Calc_frc_tdist_DIM@(DIM)_VL@(VLEN)
+void algorithms::Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN)
 @ROUT frc_sigmoid
 /* frc_sigmoid : sigmoid + negative sampling : NSRW */
-void algorithms::Calc_frc_sigmoid_DIM@(DIM)_VL@(VLEN)
+void algorithms::Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN)
 @ROUT ! 
 
 (
@@ -58,7 +67,7 @@ void algorithms::Calc_frc_sigmoid_DIM@(DIM)_VL@(VLEN)
 @ROUT frc_tdist
    VALUETYPE degi = 1.0; 
 @ROUT frc_sigmoid
-   degi = 1.0 / (rowptr[i+1] - rowptr[i] + 1);
+   VALUETYPE degi = 1.0 / (rowptr[i+1] - rowptr[i] + 1);
 @ROUT ! 
    
    BCL_vset1(VMAXBOUND, MAXBOUND); 
@@ -98,7 +107,7 @@ void algorithms::Calc_frc_sigmoid_DIM@(DIM)_VL@(VLEN)
       Vt
    @enddeclare
 @ROUT frc_sigmoid
-      VTYPE vd0, vd1;
+      VTYPE Vd0, Vd1;
       VALUETYPE d1;
 @ROUT !
    @declare "      VTYPE " y n ";"
@@ -196,7 +205,7 @@ void algorithms::Calc_frc_sigmoid_DIM@(DIM)_VL@(VLEN)
       // vmac 
    @iexp i 0
    @iwhile i < @(rdim)
-      BCL_vmac(Vy@(i), Vd1, Vxj@(i);
+      BCL_vmac(Vy@(i), Vd1, Vxj@(i));
       @iexp i @(i) 1 +
    @endiwhile
 @ROUT ! 
