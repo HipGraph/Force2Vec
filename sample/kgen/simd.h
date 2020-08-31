@@ -10,12 +10,19 @@
 #define BLC_X86   
 /*#define BLC_AVXZ*/ 
 /* #define BLC_AVX2 */
-#define BLC_AVX
+/* #define BLC_AVX */
+/* #define BLC_SSE3 */
+/* #define BLC_SSE4_1 */
+/* #define BLC_SSE1 */
+#define BLC_SSE4_2
 /*#define BLC_AVX2 */
  /*
   *   inst format: inst(dist, src1, src2)
   */
 #ifdef BLC_X86
+/*
+ * AVX512 
+ */
    #if defined(BLC_AVXZ) || defined(BLC_AVX512) /* avx512f */
       #include<immintrin.h>
       #define VLENb 64
@@ -101,7 +108,7 @@
          }
       #endif
 /*
- * AVX 
+ * AVX2 and AVX  
  */
    #elif defined(BLC_AVX2) || defined(BLC_AVXMAC) || defined(BLC_AVX) 
       #include<immintrin.h>
@@ -227,8 +234,12 @@
            d_ = _mm256_cvtss_f32(t1_); \
       	 }
       #endif
-   #elif defined(BLC_SSE2) || defined(BLC_SSE3) || defined(BLC_SSE4.1) \
-         || defined(BLC_SSE4.2)
+/*
+ * SSE: SSE4.2 SSE4.1 SSE3 SSE2 
+ */
+   #elif defined(BLC_SSE2) || defined(BLC_SSE3) || defined(BLC_SSE4_1) \
+         || defined(BLC_SSE4_2)
+      #include<xmmintrin.h>
       #define VLENb 16
       #if defined(DREAL)
          #define VLEN 2
@@ -259,7 +270,7 @@
          {  VTYPE _vx = _mm_set1_pd(1.0); \
             d_ = _mm_div_pd(_vx, s_); \
          }
-         #if defined(SSE4.1) || defined(SSE4.2)
+         #if defined(SSE4_1) || defined(SSE4_2)
             /* NOTE: ik_ must be const int imm8  */ 
             #define BCL_imaskz_vrcp(d_, ik_, s_) \
             {  VTYPE v0_ = _mm_setzero_pd();\
@@ -269,7 +280,7 @@
                d_ = _mm_blend_pd(d_, v0_, ik_); \
             }
          #else
-            #error "BCL_imaskz_vrcp not supported prior to SSE4.1!"
+            /* #error "BCL_imaskz_vrcp not supported prior to SSE4.1!" */
          #endif
          /*
           * NOTE: other form of MASK inst not supported 
@@ -278,7 +289,7 @@
  *       VVRSUM codes from ATLAS 
  */
          /* vector to scalar */
-         #if defined(SSE3) || defined(SSE4.1) || defined(SSE4.2)
+         #if defined(SSE3) || defined(SSE4_1) || defined(SSE4_2)
             #define BCL_vrsum1(d_, s_) d_ = _mm_cvtsd_f64(_mm_hadd_pd(s_, s_))
          #else /* SSE2, hadd not supported */
             #define BCL_vrsum1(d_, s_) \
@@ -313,7 +324,7 @@
             d_ = _mm_div_ps(_vx, s_); \
          }
          /* blend operation supported from SSE4.1 */
-         #if defined(SSE4.1) || defined(SSE4.2)
+         #if defined(SSE4_1) || defined(SSE4_2)
             /* NOTE: ik_ must be const int imm8  */ 
             #define BCL_imaskz_vrcp(d_, ik_, s_) \
             {  VTYPE v0_ = _mm_setzero_ps();\
@@ -323,12 +334,12 @@
                d_ = _mm_blend_ps(d_, v0_, ik_); \
             }
          #else
-            #error "BCL_imaskz_vrcp not supported prior to SSE4.1!"
+            /* #error "BCL_imaskz_vrcp not supported prior to SSE4.1!" */
          #endif
 /*
  *       VVRSUM codes from ATLAS 
  */
-         #if defined(SSE3) || defined(SSE4.1) || defined(SSE4.2)
+         #if defined(SSE3) || defined(SSE4_1) || defined(SSE4_2)
             #define BCL_vrsum1(d_, s_) \
             {  VTYPE t_; \
                t_ = _mm_hadd_ps(s_, s_); \
@@ -345,7 +356,11 @@
             }
          #endif
       #endif
+/*
+ * SSE1 
+ */
    #elif defined(BLC_SSE1)
+      #include<xmmintrin.h>
       #define VLENb 16
       #if defined(SREAL)
          #define VLEN 4
