@@ -9,7 +9,8 @@
 
 #define BLC_X86   
 /*#define BLC_AVXZ*/ 
-#define BLC_AVX2
+/* #define BLC_AVX2 */
+#define BLC_AVX
 /*#define BLC_AVX2 */
  /*
   *   inst format: inst(dist, src1, src2)

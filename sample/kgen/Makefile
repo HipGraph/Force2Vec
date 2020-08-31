@@ -19,17 +19,17 @@ ifeq ($(force), s)
    frout=frc_sigmoid
 endif 
 
-all: g$(pre)$(frout)_D$(dim).h  
+all: g$(pre)$(frout)_D$(dim).c  
 
 xextract: extract.c 
 	$(CC) $(CFLAGS) -o $@ extract.c 
 
-g$(pre)$(frout)_D$(dim).h : xextract genDimFrc.base
+g$(pre)$(frout)_D$(dim).c : xextract genDimFrc.base
 	./xextract -b genDimFrc.base -langC -def DIM $(dim) pre=$(pre) \
 	   -def VLEN $(vlen) rout=$(frout) -o $@  
 
 clean:
-	rm -f g*.h 
+	rm -f g*.h g*.c  
 
 kill:
 	rm -f xextract   

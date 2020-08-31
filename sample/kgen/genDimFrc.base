@@ -32,10 +32,12 @@
 @endiif 
 @ROUT frc_tdist
 /* frc_tdist : t-distribution + negative sampling : NS */
-void algorithms::Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN)
+/* void algorithms::Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN) */
+void Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN)
 @ROUT frc_sigmoid
 /* frc_sigmoid : sigmoid + negative sampling : NSRW */
-void algorithms::Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN)
+/* void algorithms::Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN) */
+void Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN)
 @ROUT ! 
 
 (
