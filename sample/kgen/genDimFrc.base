@@ -35,6 +35,8 @@
 /* void algorithms::Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN) */
 void Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN)
 @ROUT frc_sigmoid
+/* function prototype to calc fast sigmoid */
+VALUETYPE fast_SM(VALUETYPE);
 /* frc_sigmoid : sigmoid + negative sampling : NSRW */
 /* void algorithms::Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN) */
 void Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN)

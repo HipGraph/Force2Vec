@@ -7,14 +7,19 @@
 #ifndef _SIMD_H_
 #define _SIMD_H_
 
-#define BLC_X86   
+//#define BLC_X86   
+
+#define BLC_ARM64
+
+#define BLC_ARM_ASIMD
+#define BLC_ARM_NEON   
 /*#define BLC_AVXZ*/ 
 /* #define BLC_AVX2 */
 /* #define BLC_AVX */
 /* #define BLC_SSE3 */
 /* #define BLC_SSE4_1 */
 /* #define BLC_SSE1 */
-#define BLC_SSE4_2
+/*#define BLC_SSE4_2*/
 /*#define BLC_AVX2 */
  /*
   *   inst format: inst(dist, src1, src2)
@@ -407,7 +412,9 @@
    #else
       #error "Unsupported X86 SIMD!"
    #endif
-
+/*
+ * Power PC with VSX  
+ */
 #elif defined(BLC_VSX)  /* openPower vector unit */
    #include <altivec.h>   
    #define VLENb 16
@@ -452,39 +459,47 @@
          d_ = vec_add(d_, t_) ; \
       }
    #endif
+/*
+ * ARM64 
+ */
 #elif defined(BLC_ARM64) /* arm64 machine */
    #define VLENb 16
    #include "arm_neon.h"
-   #if defined(BCL_GAS_ARM) && defined(DREAL)
+   #if defined(BLC_ARM_ASIMD) && defined(DREAL)
          #define VLEN 2
          #define VTYPE float64x2_t
          #define BCL_vzero(v_) v_ = vdupq_n_f64(0.0)
-         #define BCL_vbcast(v_, p_) v_ =  vld1q_dup_f64(p_)
+         #define BCL_vbcast(v_, p_) v_ =  vdupq_n_f64(*(p_))
+         #define BCL_vset1(v_, f_) v_ =  vdupq_n_f64(f_)
          #define BCL_vld(v_, p_) v_ = vld1q_f64(p_)
          #define BCL_vst(p_, v_) vst1q_f64(p_, v_)
          #define BCL_vadd(d_, s1_, s2_) d_ = vaddq_f64(s1_, s2_)
          #define BCL_vsub(d_, s1_, s2_) d_ = vsubq_f64(s1_, s2_)
          #define BCL_vmul(d_, s1_, s2_) d_ = vmulq_f64(s1_, s2_)
          #define BCL_vmac(d_, s1_, s2_) d_ = vfmaq_f64(d_, s1_, s2_)
-         #define BCL_vmax(d_, s1_, s2_) d_ = vmax_f64(d_, s1_, s2_)
-         #define BCL_vmin(d_, s1_, s2_) d_ = vmin_f64(d_, s1_, s2_)
-         #define BCL_vrcp(d_, s_) d_ = vrecps_f64(s_)
-         #define BCL_vrsum1(d_, s_) d_ = vget_low_f64(vpaddq_f64(s_, s_))
-   #elif defined(BCL_NEON) || defined(SREAL) /* NEON SIMD unit */
+         #define BCL_vmax(d_, s1_, s2_) d_ = vmaxq_f64(s1_, s2_)
+         #define BCL_vmin(d_, s1_, s2_) d_ = vminq_f64(s1_, s2_)
+         #define BCL_vrcp(d_, s_) d_ = vrecpeq_f64(s_)
+         #define BCL_vrsum1(d_, s_) \
+	 {  VTYPE t0_; \
+	    t0_ = vpaddq_f64(s_, s_); \
+            d_ = t0_[0]; \
+	 }
+   #elif defined(BLC_ARM_NEON) || defined(SREAL) /* NEON SIMD unit */
          #define VLEN 4
          #define VTYPE float32x4_t
          #define BCL_vzero(v_) v_ = vdupq_n_f32(0.0f)
          #define BCL_vbcast(v_, p_) v_ =  vdupq_n_f32(*(p_));
-         #define BCL_vset1(v_, f_) v_ = vdupq_n_f32(f);
+         #define BCL_vset1(v_, f_) v_ = vdupq_n_f32(f_);
          #define BCL_vld(v_, p_) v_ = vld1q_f32(p_)
          #define BCL_vst(p_, v_) vst1q_f32(p_, v_)
          #define BCL_vadd(d_, s1_, s2_) d_ = vaddq_f32(s1_, s2_)
          #define BCL_vsub(d_, s1_, s2_) d_ = vsubq_f32(s1_, s2_)
          #define BCL_vmul(d_, s1_, s2_) d_ = vmulq_f32(s1_, s2_)
          #define BCL_vmac(d_, s1_, s2_) d_ = vmlaq_f32(d_, s1_, s2_)
-         #define BCL_vmax(d_, s1_, s2_) d_ = vmax_f32(d_, s1_, s2_)
-         #define BCL_vmin(d_, s1_, s2_) d_ = vmin_f32(d_, s1_, s2_)
-         #define BCL_vrcp(d_, s_) d_ = vrecps_f32(s_)
+         #define BCL_vmax(d_, s1_, s2_) d_ = vmaxq_f32(s1_, s2_)
+         #define BCL_vmin(d_, s1_, s2_) d_ = vminq_f32(s1_, s2_)
+         #define BCL_vrcp(d_, s_) d_ = vrecpeq_f32(s_)
          #define BCL_vrsum1(d_, s_) \
          {  VTYPE t4_; float32x2_t t2_, t1_; \
             t1_ = vget_high_f32(s_); \
