@@ -8,11 +8,10 @@
 #define _SIMD_H_
 
 //#define BLC_X86   
-
-#define BLC_ARM64
-
-#define BLC_ARM_ASIMD
-#define BLC_ARM_NEON   
+//#define BLC_ARM64
+//#define BLC_ARM_ASIMD
+//#define BLC_ARM_NEON 
+#define BLC_POWER_VSX 
 /*#define BLC_AVXZ*/ 
 /* #define BLC_AVX2 */
 /* #define BLC_AVX */
@@ -415,7 +414,7 @@
 /*
  * Power PC with VSX  
  */
-#elif defined(BLC_VSX)  /* openPower vector unit */
+#elif defined(BLC_POWER_VSX)  /* openPower vector unit */
    #include <altivec.h>   
    #define VLENb 16
    #if defined(DREAL)
@@ -425,38 +424,42 @@
       #define VLEN 4
       #define VTYPE vector float 
    #endif
-   #define BLC_vldu(v_, p_) v_ = vec_vsx_ld(0, (VTYPE*)(p_)) 
-   #define BLC_vld(v_, p_) v_ = vec_ld(0, (VTYPE*)(p_))  
-   #define BLC_vzero(v_) v_ = vec_splats((VALUETYPE)0.0)
-   #define BLC_vstu(p_, v_) vec_vsx_st(v_, 0, (VTYPE*)(p_))
-   #define BLC_vst(p_, v_)  vec_st(v_, 0, (VTYPE*)(p_))
-   #define BLC_vbcast(v_, p_) v_ =  vec_splats(*((VALUETYPE*)(p_)))
-   #define BLC_vadd(d_, s1_, s2_) d_ =  vec_add(s1_, s2_) 
-   #define BLC_vsub(d_, s1_, s2_) d_ =  vec_sub(s1_, s2_) 
-   #define BLC_vmul(d_, s1_, s2_) d_ =  vec_mul(s1_, s2_) 
-   #define BLC_vdiv(d_, s1_, s2_) d_ =  vec_div(s1_, s2_) 
-   #define BLC_vmac(d_, s1_, s2_) d_ =  vec_madd(s1_, s2_, d_) 
-   #define BLC_vmax(d_, s1_, s2_) d_ =  vec_max(s1_, s2_) 
-   #define BLC_vmin(d_, s1_, s2_) d_ =  vec_min(s1_, s2_) 
+   #define BCL_vldu(v_, p_) v_ = vec_vsx_ld(0, (VTYPE*)(p_)) 
+   #define BCL_vld(v_, p_) v_ = vec_ld(0, (VTYPE*)(p_))  
+   #define BCL_vzero(v_) v_ = vec_splats((VALUETYPE)0.0)
+   #define BCL_vstu(p_, v_) vec_vsx_st(v_, 0, (VTYPE*)(p_))
+   #define BCL_vst(p_, v_)  vec_st(v_, 0, (VTYPE*)(p_))
+   #define BCL_vbcast(v_, p_) v_ =  vec_splats(*((VALUETYPE*)(p_)))
+   #define BCL_vset1(v_, f_) v_ =  vec_splats((VALUETYPE)(f_))
+   #define BCL_vadd(d_, s1_, s2_) d_ =  vec_add(s1_, s2_) 
+   #define BCL_vsub(d_, s1_, s2_) d_ =  vec_sub(s1_, s2_) 
+   #define BCL_vmul(d_, s1_, s2_) d_ =  vec_mul(s1_, s2_) 
+   #define BCL_vdiv(d_, s1_, s2_) d_ =  vec_div(s1_, s2_) 
+   #define BCL_vmac(d_, s1_, s2_) d_ =  vec_madd(s1_, s2_, d_) 
+   #define BCL_vmax(d_, s1_, s2_) d_ =  vec_max(s1_, s2_) 
+   #define BCL_vmin(d_, s1_, s2_) d_ =  vec_min(s1_, s2_) 
    #define BCL_vrcp(d_, s_) d_ = vec_re(s_); /* reciprocal */
    /* FIXME: need to use vec_se to implement masked rcp  
    //#define BCL_imaskz_vrcp(d_, ik_) \ */
    #ifdef DREAL 
       #define BCL_vrsum1(d_, s_) \
       { \
-         d_ = vec_splat(s_, 1); \
-         d_ = vec_add(d_, s_) ; \
+         VTYPE t0_; \
+         t0_ = vec_splat(s_, 1); \
+         t0_ = vec_add(t0_, s_) ; \
+         d_ = t0_[0]; \
       }
    #else
       #define BCL_vrsum1(d_, s_) \
       { \
-         VTYPE t_; \
-         d_ = vec_splat(s_, 1); \
-         d_ = vec_add(d_, s_) ; \
-         t_ = vec_splat(s_, 2); \
-         d_ = vec_add(d_, t_) ; \
-         t_ = vec_splat(s_, 3); \
-         d_ = vec_add(d_, t_) ; \
+         VTYPE t0_, t1_; \
+         t0_ = vec_splat(s_, 1); \
+         t0_ = vec_add(t0_, s_) ; \
+         t1_ = vec_splat(s_, 2); \
+         t1_ = vec_add(t1_, t0_) ; \
+         t0_ = vec_splat(s_, 3); \
+         t1_ = vec_add(t1_, t0_) ; \
+         d_ = t1_[0]; \
       }
    #endif
 /*
