@@ -474,7 +474,9 @@
          #define BCL_vbcast(v_, p_) v_ =  vdupq_n_f64(*(p_))
          #define BCL_vset1(v_, f_) v_ =  vdupq_n_f64(f_)
          #define BCL_vld(v_, p_) v_ = vld1q_f64(p_)
+         #define BCL_vldu(v_, p_) v_ = vld1q_f64(p_)    /* no inst for unaligned, perf penalty anyway */
          #define BCL_vst(p_, v_) vst1q_f64(p_, v_)
+         #define BCL_vstu(p_, v_) vst1q_f64(p_, v_)     /* no inst for unaligned, perf penalty anyway */
          #define BCL_vadd(d_, s1_, s2_) d_ = vaddq_f64(s1_, s2_)
          #define BCL_vsub(d_, s1_, s2_) d_ = vsubq_f64(s1_, s2_)
          #define BCL_vmul(d_, s1_, s2_) d_ = vmulq_f64(s1_, s2_)
@@ -494,7 +496,9 @@
          #define BCL_vbcast(v_, p_) v_ =  vdupq_n_f32(*(p_));
          #define BCL_vset1(v_, f_) v_ = vdupq_n_f32(f_);
          #define BCL_vld(v_, p_) v_ = vld1q_f32(p_)
+         #define BCL_vldu(v_, p_) v_ = vld1q_f32(p_)   /* no inst for unaligned, perf penalty anyway */
          #define BCL_vst(p_, v_) vst1q_f32(p_, v_)
+         #define BCL_vstu(p_, v_) vst1q_f32(p_, v_)    /* no inst for unaligned, perf penalty anyway */
          #define BCL_vadd(d_, s1_, s2_) d_ = vaddq_f32(s1_, s2_)
          #define BCL_vsub(d_, s1_, s2_) d_ = vsubq_f32(s1_, s2_)
          #define BCL_vmul(d_, s1_, s2_) d_ = vmulq_f32(s1_, s2_)
