@@ -8,7 +8,7 @@ force = [t,s] : to generate kernel based on t-distribution, use make force=t
                 to generate kernel based on sigmoid, use make force=s
 
 vlen = [D]    : to set SIMD width, use vlen. Please see simd.h file to get 
-                different values of vlen on different architecture. 
+                different values of vlen on different architectures. 
 dim = [D]     : to set dimension,  use dim and it should be multiple of vlen. 
 pre = [s,d]   : to set precision of the kernel as single precision floating point
                 use pre=s. For double precision, use pre=d  
@@ -16,4 +16,10 @@ pre = [s,d]   : to set precision of the kernel as single precision floating poin
 Please note that you will need simd.h file to compile these kernels. It is a 
 wrapper and contains all system specific implementations. 
 
+simd.h : currently supports following SIMD intrinsics: 
+	 1. AVX512, AVX2, AVX, SSE4.1, SSE3, SSE1 in X86, 
+	 2. ASIMD,NEON in ARM64, and 
+	 3. VSX in PowerPC. 
 
+To compile, provide appropriate compiler flags for the system, e.g.,: 
+	AVX2: gcc -mavx -mfma -c gdfrc_tdist_D32.c 

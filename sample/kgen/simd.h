@@ -7,19 +7,18 @@
 #ifndef _SIMD_H_
 #define _SIMD_H_
 
-//#define BLC_X86   
-//#define BLC_ARM64
-//#define BLC_ARM_ASIMD
-//#define BLC_ARM_NEON 
-#define BLC_POWER_VSX 
-/*#define BLC_AVXZ*/ 
-/* #define BLC_AVX2 */
-/* #define BLC_AVX */
-/* #define BLC_SSE3 */
-/* #define BLC_SSE4_1 */
-/* #define BLC_SSE1 */
-/*#define BLC_SSE4_2*/
-/*#define BLC_AVX2 */
+/*#define BLC_ARM64 */
+   /*#define BLC_ARM_ASIMD */
+   /*#define BLC_ARM_NEON */
+/*#define BLC_POWER_VSX */
+#define BLC_X86   
+   /*#define BLC_AVXZ*/ 
+   #define BLC_AVX2
+   /* #define BLC_AVX */
+   /*#define BLC_SSE4_2*/
+   /* #define BLC_SSE4_1 */
+   /* #define BLC_SSE3 */
+   /* #define BLC_SSE1 */
  /*
   *   inst format: inst(dist, src1, src2)
   */
