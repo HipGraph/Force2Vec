@@ -19,7 +19,10 @@ wrapper and contains all system specific implementations.
 simd.h : currently supports following SIMD intrinsics: 
 	 1. AVX512, AVX2, AVX, SSE4.1, SSE3, SSE1 in X86, 
 	 2. ASIMD,NEON in ARM64, and 
-	 3. VSX in PowerPC. 
+	 3. VSX in OpenPOWER. 
 
 To compile, provide appropriate compiler flags for the system, e.g.,: 
 	AVX2: gcc -mavx -mfma -c gdfrc_tdist_D32.c 
+
+rungen.sh : This script file can be use to generate kernels in a range of values 
+of dimension. Please use the command "./rungen.sh --help" to see all the options.  
