@@ -32,6 +32,7 @@ $ make clean
 $ make AVX512=true
 ```
 On a Linux terminal, you can type `lscpu` to see supported flags in your machine. If you see avx512\* there, then your machine supports AVX512 instruction set.
+Please note that you will need avx512f and avx512dq extension to run our AVX512 intrinsic codes. 
 
 ## Users: Run Force2Vec from Command Line
 
@@ -65,6 +66,9 @@ Here, `-input` is the full path of input file, `-output` is the directory where 
 First line of output file will contains the number of vertices (N) and the embedding dimension (D). The following N lines will contain vertex id and a D-dimensional embedding for corresponding vertex id.
 
 N.B.: To reproduce the runtime results, we recommend to run the option 11 provided that you have AVX512 instruction set. For general purpose usages, run Force2Vec with any option from  5, 6, and 7. AVX512 currently supports 64 and 128 dimensional embeddings.
+
+### Code Generator ###
+We have a code generator in sample/kgen directory to generate various attractive and repulsive force kernels based on t-distribution and sigmoid, floating point precision, and dimension (d). By setting appropriate macro in simd.h, you can apply those generated kernels for different machines (currently supported AVX512, AVX2, AVX, SSE in X86, ASIMD, NEON in ARM64 and VSX in OpenPOWER). We have a script file in that directory as well which can be used to generate all kernels in a range of values of dimension. Please see README file in that directory for details.    
 
 ### Convert Edgelist Input File to Matrix Market Format ###
 To increase the usability of Force2Vec for other file types, we have a python script that can convert edgelist input format to matrix market format. It uses `networkx` python package. You can convert an edgelist input file as follows:

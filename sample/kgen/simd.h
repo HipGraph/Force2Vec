@@ -12,8 +12,8 @@
    /*#define BLC_ARM_NEON */
 /*#define BLC_POWER_VSX */
 #define BLC_X86   
-   #define BLC_AVXZ 
-   /*#define BLC_AVX2*/
+   /*#define BLC_AVXZ*/ 
+   #define BLC_AVX2
    /* #define BLC_AVX */
    /*#define BLC_SSE4_2*/
    /* #define BLC_SSE4_1 */

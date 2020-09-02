@@ -1,3 +1,13 @@
+@ROUT ! 
+@define pre @@(@pre)@
+@PRE S
+#define VALUETYPE float
+#define SREAL 1
+@PRE D
+#define VALUETYPE double
+#define DREAL 1
+@PRE !
+#define INDEXTYPE int 
 #include "simd.h"
 @define pre @@(@pre)@
 @SKIP ******** dim must be multiple of VLEN ***** 
@@ -20,8 +30,18 @@
 @iif kk ! DIM
    @abort "DIM=@(DIM) must be multiple of VLEN=@(VLEN)"
 @endiif 
+@ROUT frc_tdist
+/* frc_tdist : t-distribution + negative sampling : NS */
+/* void algorithms::Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN) */
+void Calc_@(pre)frc_tdist_DIM@(DIM)_VL@(VLEN)
+@ROUT frc_sigmoid
+/* function prototype to calc fast sigmoid */
+VALUETYPE fast_SM(VALUETYPE);
+/* frc_sigmoid : sigmoid + negative sampling : NSRW */
+/* void algorithms::Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN) */
+void Calc_@(pre)frc_sigmoid_DIM@(DIM)_VL@(VLEN)
+@ROUT ! 
 
-void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
 (
    INDEXTYPE i,          /* row id: index of outer most loop  */
    INDEXTYPE baseindex,  /* base row id for this minibatch */
@@ -47,8 +67,12 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
    VTYPE VMAXBOUND, VMINBOUND; 
    INDEXTYPE iindex = i * @(DIM); 
    VALUETYPE *Xi = X + iindex; 
-   INDEXTYPE bindex = i * @(DIM); 
+   INDEXTYPE bindex = i * @(DIM);
+@ROUT frc_tdist
    VALUETYPE degi = 1.0; 
+@ROUT frc_sigmoid
+   VALUETYPE degi = 1.0 / (rowptr[i+1] - rowptr[i] + 1);
+@ROUT ! 
    
    BCL_vset1(VMAXBOUND, MAXBOUND); 
    BCL_vset1(VMINBOUND, -MAXBOUND); 
@@ -77,6 +101,7 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
          @iexp i @(i) 1 +
       @endiwhile
    @enddeclare
+@ROUT frc_tdist 
    @declare "      VTYPE " y n ";"
       @iexp i 0 
       @iwhile i < @(rdim)
@@ -85,6 +110,10 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       @endiwhile
       Vt
    @enddeclare
+@ROUT frc_sigmoid
+      VTYPE Vd0, Vd1;
+      VALUETYPE d1;
+@ROUT !
    @declare "      VTYPE " y n ";"
       @iexp i 0 
       @iwhile i < @(rdim)
@@ -109,6 +138,7 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       BCL_vzero(Vatt@(i));
       @iexp i @(i) 1 +
    @endiwhile
+@ROUT frc_tdist
       // vsub 
    @iexp i 0
    @iwhile i < @(rdim)
@@ -121,6 +151,14 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       BCL_vmac(Vatt@(i), Vd@(i), Vd@(i));
       @iexp i @(i) 1 +
    @endiwhile
+@ROUT frc_sigmoid
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vatt@(i), Vxi@(i), Vxj@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+@ROUT !
       // reduce Vatt: FIXME: use logN tree reduction
    @iexp i 1
    @iwhile i < @(rdim)
@@ -129,6 +167,7 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
    @endiwhile
       BCL_vrsum1(attrc, Vatt0);
    
+@ROUT frc_tdist
       BCL_vset1(Vatt0, attrc); // a = a
       BCL_vset1(Vt, 1.0f); // t = 1
       BCL_vadd(Vatt0, Vatt0, Vt); // a = t + a
@@ -162,8 +201,21 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       BCL_vmac(Vy@(i), Vd@(i), Vt);
       @iexp i @(i) 1 +
    @endiwhile
+
+@ROUT frc_sigmoid
+      d1 = fast_SM(attrc);
+      d1 = STEP * degi * (1.0 - d1);
+      BCL_vset1(Vd1, d1);
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vy@(i), Vd1, Vxj@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+@ROUT ! 
    }
-   
+  
+   /* repulsive force */
    for (INDEXTYPE j = 0; j < ns; j++)
    {
       VALUETYPE repuls = 0;
@@ -175,6 +227,7 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
          @iexp i @(i) 1 +
       @endiwhile
    @enddeclare
+@ROUT frc_tdist
    @declare "      VTYPE " y n ";"
       @iexp i 0 
       @iwhile i < @(rdim)
@@ -183,6 +236,10 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       @endiwhile
       Vt
    @enddeclare
+@ROUT frc_sigmoid
+      VTYPE Vd1;
+      VALUETYPE d1;
+@ROUT !
    @declare "      VTYPE " y n ";"
       @iexp i 0 
       @iwhile i < @(rdim)
@@ -196,12 +253,13 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       BCL_vld(Vs@(i), S + jindex + VLEN*@(i)); 
       @iexp i @(i) 1 +
    @endiwhile
-      // init Vatt  
+      // init Vrep  
    @iexp i 0
    @iwhile i < @(rdim)
       BCL_vzero(Vrep@(i));
       @iexp i @(i) 1 +
    @endiwhile
+@ROUT frc_tdist 
       // vsub 
    @iexp i 0
    @iwhile i < @(rdim)
@@ -214,6 +272,14 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       BCL_vmac(Vrep@(i), Vd@(i), Vd@(i));
       @iexp i @(i) 1 +
    @endiwhile
+@ROUT frc_sigmoid
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vrep@(i), Vxi@(i), Vs@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+@ROUT !
       // reduce Vrep: FIXME: use logN tree reduction
    @iexp i 1
    @iwhile i < @(rdim)
@@ -221,7 +287,7 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       @iexp i @(i) 1 +
    @endiwhile
       BCL_vrsum1(repuls, Vrep0);
-   
+@ROUT frc_tdist 
       BCL_vset1(Vrep0, repuls); // a = a
       BCL_vset1(Vt, 1.0f); // t = 1
       BCL_vadd(Vt, Vrep0, Vt); // t = t + a
@@ -258,6 +324,17 @@ void algorithms::CalcForce_DIM@(DIM)_VL@(VLEN)
       BCL_vmac(Vy@(i), Vd@(i), Vt);
       @iexp i @(i) 1 +
    @endiwhile
+@ROUT frc_sigmoid
+      d1 = fast_SM(repuls);
+      d1 = -1.0 * STEP * d1; // Y = Y - d * S  => Y += (-d) * S;
+      BCL_vset1(Vd1, d1);
+      // vmac 
+   @iexp i 0
+   @iwhile i < @(rdim)
+      BCL_vmac(Vy@(i), Vd1, Vs@(i));
+      @iexp i @(i) 1 +
+   @endiwhile
+@ROUT !
    }
 
    @iexp i 0
