@@ -50,6 +50,7 @@ Here, `-input` is the full path of input file, `-output` is the directory where 
 -dim <int>, size of embedding dimension. (default:128)
 -nsamples <int>, number of negative samples. (default:5)
 -lr <float>, learning rate of SGD. (default:0.02)
+-bs <int>, chose 0 for s negative samples or 1 for batch * s negative samples. (default:0)
 -option <int>, an integer among 1 to 11. (default:5)
         1 - for Force2Vec (O(n^2) version).
         2 - for BatchLayout (O(n^2) version).
