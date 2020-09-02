@@ -50,6 +50,7 @@ void TestAlgorithms(int argc, char *argv[]){
 	VALUETYPE gamma = 1.0, lr = 0.02;
 	INDEXTYPE batchsize = 384, iterations = 1200, numberOfThreads = omp_get_max_threads(), dim = 128, option = 5, nsamples = 5;
 	string inputfile = "", initfile = "", outputfile = "", algoname = "Force2Vec:t-distribution with negative sampling", initname = "RAND";
+	INDEXTYPE bs = 0;
 	for(int p = 0; p < argc; p++){
 		if(strcmp(argv[p], "-input") == 0){
 			inputfile = argv[p+1];
@@ -71,6 +72,9 @@ void TestAlgorithms(int argc, char *argv[]){
 		}
 		else if(strcmp(argv[p], "-gamma") == 0){
 			gamma = atof(argv[p+1]);
+		}
+		else if(strcmp(argv[p], "-bs") == 0){
+			bs = atoi(argv[p+1]);
 		}
 		else if(strcmp(argv[p], "-option") == 0){
                         option = atoi(argv[p+1]);
@@ -132,10 +136,16 @@ void TestAlgorithms(int argc, char *argv[]){
 	}else if(option == 4){
 		outputvec = algo.AlgoForce2VecFA(iterations, numberOfThreads, batchsize);
 	}else if(option == 5){
+		if(bs == 0)
 		outputvec = algo.AlgoForce2VecNS(iterations, numberOfThreads, batchsize, nsamples, lr);
+		else
+		outputvec = algo.AlgoForce2VecNSBS(iterations, numberOfThreads, batchsize, nsamples, lr);
 	}else if(option == 6){
+		if(bs == 0)
                 outputvec = algo.AlgoForce2VecNSRW(iterations, numberOfThreads, batchsize, nsamples, lr);
-        }else if(option == 7){
+        	else
+		outputvec = algo.AlgoForce2VecNSRWBS(iterations, numberOfThreads, batchsize, nsamples, lr);
+	}else if(option == 7){
                 outputvec = algo.AlgoForce2VecNSRWEFF(iterations, numberOfThreads, batchsize, nsamples, lr);
         }
 

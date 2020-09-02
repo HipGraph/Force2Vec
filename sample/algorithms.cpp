@@ -648,6 +648,107 @@ vector<VALUETYPE> algorithms::AlgoForce2VecNS(INDEXTYPE ITERATIONS, INDEXTYPE NU
         return result;
 }
 
+vector<VALUETYPE> algorithms::AlgoForce2VecNSBS(INDEXTYPE ITERATIONS, INDEXTYPE NUMOFTHREADS, INDEXTYPE BATCHSIZE, INDEXTYPE ns, VALUETYPE lr){
+        INDEXTYPE LOOP = 0;
+        VALUETYPE STEP = lr, EPS = 0.00001;
+        double start, end;
+	double loglike0, loglike;
+        vector<VALUETYPE> result;
+        vector<INDEXTYPE> indices;
+	vector<INDEXTYPE> nsamples;
+	VALUETYPE *samples;
+	samples = static_cast<VALUETYPE *> (::operator new (sizeof(VALUETYPE[DIM * ns * BATCHSIZE])));
+        for(INDEXTYPE i = 0; i < graph.rows; i++) indices.push_back(i);
+	for(INDEXTYPE i = 0; i < graph.rows; i++) nsamples.push_back(i);
+        omp_set_num_threads(NUMOFTHREADS);
+        start = omp_get_wtime();
+        randInitF();
+        INDEXTYPE NUMSIZE = min(BATCHSIZE, graph.rows);
+        VALUETYPE *prevCoordinates;
+        prevCoordinates = static_cast<VALUETYPE *> (::operator new (sizeof(VALUETYPE[NUMSIZE * DIM])));
+	for(INDEXTYPE i = 0; i < NUMSIZE; i += 1){
+		INDEXTYPE IDIM = i*DIM;
+                for(INDEXTYPE d = 0; d < this->DIM; d++){
+                        prevCoordinates[IDIM + d] = 0;
+                }
+        }
+	loglike0 = loglike = numeric_limits<double>::max();
+        while(LOOP < ITERATIONS){
+		loglike0 = loglike;
+		loglike = 0;
+		for(INDEXTYPE b = 0; b < (int)ceil( 1.0 * graph.rows / BATCHSIZE); b += 1){
+                        INDEXTYPE baseindex = b * BATCHSIZE * DIM;
+			
+			//#pragma omp parallel for schedule(static)		
+			for(INDEXTYPE s = 0; s < ns * BATCHSIZE; s++){
+				int rindex = randIndex(graph.rows-1, 0);
+				int randombaseindex = rindex * DIM;
+				int sindex = s * DIM;
+				for(INDEXTYPE d = 0; d < DIM; d++){
+					samples[sindex + d] = nCoordinates[randombaseindex + d];
+				}
+			}
+			#pragma omp parallel for schedule(static)
+                        for(INDEXTYPE i = b * BATCHSIZE; i < (b + 1) * BATCHSIZE; i += 1){
+                                if(i >= graph.rows) continue;
+                                VALUETYPE forceDiff[DIM];
+				INDEXTYPE iindex = i*DIM;
+				INDEXTYPE bindex = i * DIM;
+				INDEXTYPE degree = graph.rowptr[i+1] - graph.rowptr[i];
+				#pragma forceinline
+                                #pragma omp simd
+                                for(INDEXTYPE j = graph.rowptr[i]; j < graph.rowptr[i+1]; j += 1){
+                                        VALUETYPE attrc = 0;
+                                        INDEXTYPE colidj = graph.colids[j];
+                                        INDEXTYPE jindex = colidj*DIM;
+
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                forceDiff[d] = nCoordinates[iindex + d] - nCoordinates[jindex + d];
+                                                attrc += forceDiff[d] * forceDiff[d];
+                                        }
+					loglike += log(1 + attrc);
+                                        VALUETYPE d1 = -2.0 / (1.0 + attrc);
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                forceDiff[d] = scale(forceDiff[d] * d1);
+                                                prevCoordinates[bindex - baseindex + d] += (STEP) * forceDiff[d];
+                                        }
+                                }
+				INDEXTYPE nsamplebase = i - b * BATCHSIZE;
+                                for(INDEXTYPE j = nsamplebase; j < nsamplebase + ns; j += 1){
+                                        VALUETYPE repuls = 0;
+                                        INDEXTYPE jindex = j * DIM;
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                forceDiff[d] = this->nCoordinates[iindex + d] - samples[jindex + d];
+                                                repuls += forceDiff[d] * forceDiff[d];
+                                        }
+					loglike -= log(0.000001+repuls) - log(1+repuls);
+					VALUETYPE d1 = 2.0 / ((repuls) * (1.0 + repuls));
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                forceDiff[d] = scale(forceDiff[d] * d1);
+                                                prevCoordinates[bindex - baseindex + d] += (STEP) * forceDiff[d];
+                                        }
+                                }
+                        }
+                        for(INDEXTYPE i = b * BATCHSIZE; i < (b + 1) * BATCHSIZE; i += 1){
+                                if(i >= graph.rows) break;
+				INDEXTYPE iindex = i * DIM;
+				INDEXTYPE bindex = i * DIM;
+				#pragma omp simd
+                                for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                        this->nCoordinates[iindex + d] += prevCoordinates[bindex - baseindex + d];
+					prevCoordinates[bindex - baseindex + d] = 0;
+                                }
+                        }
+                }
+		LOOP++;
+	}
+	end = omp_get_wtime();
+        cout << "Force2Vec Parallel Wall time required (with BS negative samples):" << end - start << " seconds" << endl;
+        result.push_back(end - start);
+        writeToFile("F2VNS"+ to_string(BATCHSIZE)+"D" + to_string(this->DIM)+"IT" + to_string(LOOP)+"NS"+to_string(ns));
+        return result;
+}
+
 VALUETYPE *sm_table;
 
 void init_SM_TABLE(){
@@ -707,8 +808,8 @@ vector<VALUETYPE> algorithms::AlgoForce2VecNSRW(INDEXTYPE ITERATIONS, INDEXTYPE 
 			#pragma omp simd
 			for(INDEXTYPE s = 0; s < ns; s++){
                                 int minv = 0;//b * BATCHSIZE;
-                                int maxv = min((b+1) * BATCHSIZE, graph.rows-1);
-                                //int maxv = graph.rows-1;
+                                //int maxv = min((b+1) * BATCHSIZE, graph.rows-1);
+                                int maxv = graph.rows-1;
 				int rindex = randIndex(maxv, minv);
 				int randombaseindex = rindex * DIM;
                                 int sindex = s * DIM;
@@ -826,6 +927,135 @@ vector<VALUETYPE> algorithms::AlgoForce2VecNSRW(INDEXTYPE ITERATIONS, INDEXTYPE 
         writeToFile("F2VWNS"+ to_string(BATCHSIZE)+"D" + to_string(this->DIM)+"IT" + to_string(LOOP)+"NS"+to_string(ns));
         return result;
 }
+
+vector<VALUETYPE> algorithms::AlgoForce2VecNSRWBS(INDEXTYPE ITERATIONS, INDEXTYPE NUMOFTHREADS, INDEXTYPE BATCHSIZE, INDEXTYPE ns, VALUETYPE lr){
+        INDEXTYPE LOOP = 0;
+        VALUETYPE STEP = lr, EPS = 0.00001;
+        double start, end;
+        double loglike0, loglike;
+        vector<VALUETYPE> result;
+        vector<INDEXTYPE> indices;
+        vector<INDEXTYPE> nsamples;
+        VALUETYPE *samples;
+        samples = static_cast<VALUETYPE *> (::operator new (sizeof(VALUETYPE[DIM * ns * BATCHSIZE])));
+        unsigned long long x = time(nullptr);
+  	for (int i = 0; i < 2; i++) {
+    		unsigned long long z = x += UINT64_C(0x9E3779B97F4A7C15);
+    		z = (z ^ z >> 30) * UINT64_C(0xBF58476D1CE4E5B9);
+    		z = (z ^ z >> 27) * UINT64_C(0x94D049BB133111EB);
+    		rseed[i] = z ^ z >> 31;
+  	}
+	init_SM_TABLE();
+	omp_set_num_threads(NUMOFTHREADS);
+        start = omp_get_wtime();
+        randInit();
+        INDEXTYPE NUMSIZE = min(BATCHSIZE, graph.rows);
+        VALUETYPE *prevCoordinates;
+	int maxdegree = -1;
+        prevCoordinates = static_cast<VALUETYPE *> (::operator new (sizeof(VALUETYPE[NUMSIZE * DIM])));
+        loglike0 = loglike = numeric_limits<double>::max();
+        while(LOOP < ITERATIONS){
+                loglike0 = loglike;
+                loglike = 0;
+		for(INDEXTYPE b = 0; b < (int)ceil( 1.0 * graph.rows / BATCHSIZE); b += 1){
+                        INDEXTYPE baseindex = b * BATCHSIZE * DIM;
+			//#pragma omp parallel for schedule(static)
+			for(INDEXTYPE s = 0; s < ns * BATCHSIZE; s++){
+                                int minv = 0;//b * BATCHSIZE;
+                                int maxv = graph.rows-1; //min((b+1) * BATCHSIZE, graph.rows-1);
+				int rindex = randIndex(maxv, minv);
+				int randombaseindex = rindex * DIM;
+                                int sindex = s * DIM;
+                                for(INDEXTYPE d = 0; d < DIM; d++){
+                                        samples[sindex + d] = nCoordinates[randombaseindex + d];
+                                }
+			}
+			INDEXTYPE INITPREVSIZE = min(b * BATCHSIZE, graph.rows);
+			for(INDEXTYPE i = b * BATCHSIZE; i < (b + 1) * BATCHSIZE; i += 1){
+				if(i >= graph.rows) continue;
+                		INDEXTYPE IDIM = i*DIM;
+                		#pragma omp simd
+				for(INDEXTYPE d = 0; d < this->DIM; d++){
+                        		prevCoordinates[IDIM - baseindex + d] = nCoordinates[IDIM + d];
+                		}
+        		}
+			#pragma omp parallel for schedule(static)
+                        for(INDEXTYPE i = b * BATCHSIZE; i < (b + 1) * BATCHSIZE; i += 1){
+                                if(i >= graph.rows) continue;
+                                VALUETYPE forceDiff[DIM];
+				INDEXTYPE iindex = i * DIM;
+                                INDEXTYPE bindex = i * DIM;
+				INDEXTYPE wlength = 0;
+				INDEXTYPE windex = i;
+				VALUETYPE degi = 1.0;
+				degi = 1.0 / (graph.rowptr[i+1] - graph.rowptr[i] + 1);
+				for(INDEXTYPE j = graph.rowptr[i]; j < graph.rowptr[i+1]; j += 1){
+					VALUETYPE attrc = 0;
+                                        INDEXTYPE colidj = graph.colids[j];
+                                        INDEXTYPE jindex = colidj*DIM;
+ 
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                attrc += nCoordinates[iindex + d] * nCoordinates[jindex + d];
+					}
+					VALUETYPE d1 = fast_SM(attrc);
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                prevCoordinates[bindex - baseindex + d] += STEP * degi * (1.0 - d1) * nCoordinates[jindex + d];
+					}
+#if 0
+					VALUETYPE degj = 1.0;
+					degj = 1.0 / (graph.rowptr[colidj+1] - graph.rowptr[colidj] + 1);
+	                               	wlength = 0;
+					for(INDEXTYPE k = graph.rowptr[colidj]; k < graph.rowptr[colidj+1]; k += 1){
+						attrc = 0;
+                                                INDEXTYPE colidk = graph.colids[k];
+                                                INDEXTYPE kindex = colidk*DIM;
+                                                
+                                                for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                        attrc += nCoordinates[iindex + d] * nCoordinates[kindex + d];
+                                                }
+                                                d1 = fast_SM(attrc);
+                                                for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                        prevCoordinates[bindex - baseindex + d] += STEP * degi * degj * (1.0 - d1) * nCoordinates[kindex + d];
+						}
+						wlength++;
+                                        }					
+#endif
+					wlength++;
+					windex = colidj;
+                                }
+				INDEXTYPE nsamplebases = i - b * BATCHSIZE;
+                                for(INDEXTYPE j = nsamplebases; j < nsamplebases + ns; j += 1){
+                                        VALUETYPE repuls = 0;
+                                        INDEXTYPE jindex = j * DIM;
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+						repuls += this->nCoordinates[iindex + d] * samples[jindex + d];
+					}
+                                        VALUETYPE d1 = fast_SM(repuls);
+					
+                                        for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                                prevCoordinates[bindex - baseindex + d] -= (STEP) * d1 * samples[jindex + d];
+					}
+                                }
+                        }
+                        for(INDEXTYPE i = b * BATCHSIZE; i < (b + 1) * BATCHSIZE; i += 1){
+                                if(i >= graph.rows) continue;
+				INDEXTYPE iindex = i * DIM;
+                                INDEXTYPE bindex = i * DIM;
+                                #pragma omp simd
+                                for(INDEXTYPE d = 0; d < this->DIM; d++){
+                                        this->nCoordinates[iindex + d] = prevCoordinates[bindex - baseindex + d];
+                                }
+                        }
+                }
+		LOOP++;
+	}
+        end = omp_get_wtime();
+        cout << "Force2Vec Parallel Wall time required (with BS negative samples):" << end - start << " seconds" << endl;
+        result.push_back((float)(end - start));
+        writeToFile("F2VWNS"+ to_string(BATCHSIZE)+"D" + to_string(this->DIM)+"IT" + to_string(LOOP)+"NS"+to_string(ns));
+        return result;
+}
+
 
 vector<VALUETYPE> algorithms::AlgoForce2VecNSRWEFF(INDEXTYPE ITERATIONS, INDEXTYPE NUMOFTHREADS, INDEXTYPE BATCHSIZE, INDEXTYPE ns, VALUETYPE lr){
         INDEXTYPE LOOP = 0;
