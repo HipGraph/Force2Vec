@@ -130,11 +130,11 @@ void TestAlgorithms(int argc, char *argv[]){
 		outputvec = algo.AlgoForce2Vec(iterations, numberOfThreads, batchsize);
 		//outputvec = algo.AlgoForce2VecBR(iterations, numberOfThreads, batchsize);
 	}else if(option == 2){
-		outputvec = algo.AlgoForce2VecFR(iterations, numberOfThreads, batchsize);
+		outputvec = algo.AlgoForce2VecFR(iterations, numberOfThreads, batchsize, nsamples, lr);
 	}else if(option == 3){
-		outputvec = algo.AlgoForce2VecLL(iterations, numberOfThreads, batchsize);
+		outputvec = algo.AlgoForce2VecLL(iterations, numberOfThreads, batchsize, nsamples, lr);
 	}else if(option == 4){
-		outputvec = algo.AlgoForce2VecFA(iterations, numberOfThreads, batchsize);
+		outputvec = algo.AlgoForce2VecFA(iterations, numberOfThreads, batchsize, nsamples, lr);
 	}else if(option == 5){
 		if(bs == 0)
 		outputvec = algo.AlgoForce2VecNS(iterations, numberOfThreads, batchsize, nsamples, lr);
