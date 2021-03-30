@@ -53,9 +53,9 @@ Here, `-input` is the full path of input file, `-output` is the directory where 
 -bs <int>, chose 0 for s negative samples or 1 for batch * s negative samples. (default:0)
 -option <int>, an integer among 1 to 11. (default:5)
         1 - for Force2Vec (O(n^2) version).
-        2 - for BatchLayout (O(n^2) version).
-        3 - for LinLog (O(n^2) version).
-        4 - for ForceAtlas (O(n^2) version).
+        2 - for BatchLayout (O(ns) version).
+        3 - for LinLog (O(ns) version).
+        4 - for ForceAtlas (O(ns) version).
         5 - for t-distribution + negative sampling (tForce2Vec).
         6 - for sigmoid + negative sampling (sForce2Vec).
         7 - for sigmoid + semi-random walk (rForce2Vec).
