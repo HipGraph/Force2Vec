@@ -1,6 +1,8 @@
 # Force2Vec
 This is the official implementation for IEEE ICDM 2020 paper titled "Force2Vec: Parallel force-directed graph embedding".
 
+[**PDF is available in arXiv**](https://arxiv.org/pdf/2009.10035.pdf)
+
 ## System Requirements
 Users need to have the following softwares/tools installed in their PC/server. The source code was compiled and run successfully in both Linux and macOS.
 ```
@@ -16,6 +18,7 @@ networkx v2.3
 scipy v1.3.1
 numpy v1.16.2
 matplotlib v3.1.1
+python-louvain v0.13
 ```
 
 ## Compile Force2Vec
@@ -110,6 +113,14 @@ Md. Khaledur Rahman, Majedul Haque Sujon and Ariful Azad, "Force2Vec: Parallel F
   booktitle={2020 IEEE International Conference on Data Mining (ICDM)},
   year={2020},
   organization={IEEE}
+}
+@article{rahman2022scalable,
+  title={Scalable force-directed graph representation learning and visualization},
+  author={Rahman, Md and Sujon, Majedul Haque and Azad, Ariful and others},
+  journal={Knowledge and Information Systems},
+  pages={1--27},
+  year={2022},
+  publisher={Springer}
 }
 ```
 ## Contact 
