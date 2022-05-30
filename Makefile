@@ -15,7 +15,7 @@ endif
 all: bn force2vec
 
 bn:
-        mkdir bin
+	mkdir bin
 	
 algorithms.o:	$(SAMPLE)/algorithms.cpp $(SAMPLE)/algorithms.h $(SAMPLE)/IO.h $(SAMPLE)/CSR.h $(SAMPLE)/CSC.h
 		$(COMPILER) $(INCDIR) $(FLAGS) -c -o $(BIN)/algorithms.o $(SAMPLE)/algorithms.cpp
