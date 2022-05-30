@@ -12,8 +12,11 @@ ifeq ($(AVX512), true)
    FLAGS += -mavx512f -mavx512dq -DAVX512=1
 endif
 
-all: force2vec
+all: bn force2vec
 
+bn:
+        mkdir bin
+	
 algorithms.o:	$(SAMPLE)/algorithms.cpp $(SAMPLE)/algorithms.h $(SAMPLE)/IO.h $(SAMPLE)/CSR.h $(SAMPLE)/CSC.h
 		$(COMPILER) $(INCDIR) $(FLAGS) -c -o $(BIN)/algorithms.o $(SAMPLE)/algorithms.cpp
 
@@ -25,4 +28,5 @@ force2vec:    algorithms.o force2vec.o
 
 clean:
 	rm -rf ./bin/*
+	rm -rf bin
 	rm -rf Results.txt
